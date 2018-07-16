@@ -1,0 +1,33 @@
+<html>
+  <head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+        <style>
+            .body-title {
+                margin:5px
+            }
+            .main {
+                    margin:10px
+                }
+        </style>
+  </head>
+  <body>
+  <div class="body-title"><h2>Find {{face_datas|length}} face(s):</h2></div>
+   <div class = 'main row'>
+  {% for face in face_datas %}
+       <div class = "col-md-3">
+       <span>左 {{loop.index0 + 1}}:</span>
+       <ul>
+    <li>name : {{ face.name }}</li>
+           {% if face.age %}
+     <li>age : {{ face.age }}</li>
+       <li>Gender : {{ face.gender }}</li>
+       <li>Face score : {{ face.score }}</li>
+       <li>Skin : {{ face.skin}}</li>
+       <li>Emotion : {{ face.emotion }}</li>
+           {% endif %}
+       </ul>
+       </div>
+  {% endfor %}
+       </div>
+  </body>
+</html>

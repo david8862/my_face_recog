@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # This is a simple web service that recognizes faces in uploaded images.
 # Upload an image file and it will check if the image contains faces
 # of CRDC TIPBU member and the face location in image.
@@ -24,16 +26,19 @@
 
 
 import numpy as np
-import cv2, PIL
+import cv2, PIL, os
 from flask import Flask, jsonify, request, redirect, make_response, render_template, Response
-from libs.faces import recognize_faces_in_image, recognize_faces_in_image_fast, allowed_image, scan_known_people
+from libs.faces import recognize_faces_in_image, allowed_image, scan_known_people
+from libs.face_plus_plus import get_external_result
 
 
 app = Flask(__name__)
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 origin_image_buffer = np.zeros(5)
 result_image_buffer = np.zeros(5)
-
+known_face_names = []
+known_face_encodings = []
 
 @app.route('/phoneapi', methods=['GET', 'POST'])
 def handle_image():
@@ -88,8 +93,9 @@ def save_ori_image(imgfile):
     return img
 
 
+
 @app.route('/', methods=['GET', 'POST'])
-def upload_image():
+def upload_image_manually():
     global result_image_buffer, origin_image_buffer
     # Check if a valid image file was uploaded
     if request.method == 'POST':
@@ -102,7 +108,7 @@ def upload_image():
 
         if file and allowed_image(file.filename):
             # The image file seems valid! Detect faces and return the result.
-            result = recognize_faces_in_image_fast(file, known_face_names, known_face_encodings)
+            result = recognize_faces_in_image(file, known_face_names, known_face_encodings)
             img = add_face_rectangle(result, file)
             retval, buff = cv2.imencode('.jpg', img)
             result_image_buffer = buff.copy()
@@ -141,6 +147,35 @@ def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
+
+@app.route('/capture', methods=['GET', 'POST'])
+def upload_image():
+    import base64, uuid
+    if request.method == 'GET':
+        return render_template('index.html')
+
+    if request.method == 'POST' and 'photo' in request.form:
+        filename = uuid.uuid1()
+        if 'cec_id' in request.form and request.form['cec_id'] != '':
+            filename = "{}{}".format(filename,request.form['cec_id'])
+
+        file ="face_test/{}.png".format(filename)
+        file = os.path.join(APP_ROOT, file)
+        with open(file, "wb") as fh:
+            fh.write(base64.decodestring(request.form['photo'].split(',')[-1]))
+
+        result = recognize_faces_in_image(file, known_face_names, known_face_encodings)
+        faces = result['face_data'].values()
+        faces.sort(key=lambda k:k['left'])
+        if 'enable_face_plus' in request.form and request.form['enable_face_plus'] == 'on':
+            face_datas = get_external_result(file)
+            for i in range(len(faces)):
+                face_datas[i]['name'] = faces[i]['name']
+            return render_template('result.html',face_datas = face_datas)
+
+        return render_template('result.html',face_datas = faces)
+
 if __name__ == "__main__":
-    known_face_names, known_face_encodings = scan_known_people("face_db")
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    face_db = os.path.join(APP_ROOT, "face_db")
+    known_face_names, known_face_encodings = scan_known_people(face_db)
+    app.run(host='0.0.0.0', port=5001, ssl_context='adhoc')

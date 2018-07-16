@@ -5,6 +5,19 @@ import os, re, face_recognition, logging
 import numpy as np
 import cv2
 
+PRE_LOCATIONS = []
+PRE_FACE_NAMES = []
+PRE_DISTANCE = []
+
+def same_person(previous_location, new_location):
+    (top, right, bottom, left) = previous_location
+    (_top, _right, _bottom, _left) = previous_location
+    if (abs(top-_top)<=20 and abs(right-_right)<=20 and abs(bottom-_bottom)<=20 and  abs(left-_left)<=20):
+        return True
+    return False
+
+
+
 # You can change this to any folder on your system
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -37,27 +50,57 @@ def allowed_image(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings):
+def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings, model='hog'):
     logging.debug("step1: Load the uploaded image file")
     image = face_recognition.load_image_file(file_stream)
     logging.debug("step2: Find all the faces ")
-    face_locations = face_recognition.face_locations(image, model='hog')
+    face_locations = face_recognition.face_locations(image, model=model)
     logging.debug("step3: Get face encodings ")
     face_encodings = face_recognition.face_encodings(image, face_locations)
+    logging.debug("step4: Get face encodings...done")
+
+    global PRE_DISTANCE
+    global PRE_FACE_NAMES
+    global PRE_LOCATIONS
+
+    # save a list of true or  false to indicate the object in PRE_LOCATIONS and in face_locations is the same object
+    same_object = []
+    if (len(face_locations) == len(PRE_LOCATIONS)):
+        for location,_location in zip(face_locations, PRE_LOCATIONS):
+            same_object.append(same_person(location,_location))
+
 
     face_names = []
+    face_distances = []
     for face_encoding in face_encodings:
         # See if the face is a match for the known face(s)
         distances = face_recognition.face_distance(known_face_encodings, face_encoding)
         result = list(distances <= 0.45)
         index = np.argmin(distances)
-        name = "Unknown"
-
+        name = "  "
+        distance = min(distances)
         # If a match was found in known_face_encodings, just use the first one.
         if True in result:
             name = known_face_names[index]
 
         face_names.append(name)
+        face_distances.append(distance)
+
+    # After get the result, then compare them with history
+    for i in range(len(face_names)):
+        if(len(same_object) > 0 and same_object[i] and distance > PRE_DISTANCE[i]):
+            logging.debug("===Use history result====")
+            logging.debug("Previous names list:{}".format(PRE_FACE_NAMES))
+            logging.debug("Current face list:{}".format(face_names))
+            face_names[i] = PRE_FACE_NAMES[i]
+            logging.debug("Previous face distance:{}".format(PRE_DISTANCE))
+            logging.debug("Current face distance:{}".format(face_distances))
+            face_distances[i] = PRE_DISTANCE[i]
+            logging.debug("After use history, current names:{}, current distance:{}".format(face_names,face_distances))
+    # save history result
+    PRE_FACE_NAMES = face_names
+    PRE_LOCATIONS = face_locations
+    PRE_DISTANCE = face_distances
 
     face_found = False
     if len(face_encodings) > 0:
@@ -80,11 +123,11 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
         result['face_data']['face{}'.format(i)] = face
         i = i + 1
 
-    logging.debug("step4: Return the result as json")
+    logging.debug("step5: Return the result as json")
     return result
 
 
-def recognize_faces_in_image_fast(file_stream, known_face_names, known_face_encodings):
+def recognize_faces_in_image_fast(file_stream, known_face_names, known_face_encodings, model='hog'):
     logging.debug("step1: Load the uploaded image file")
     image = face_recognition.load_image_file(file_stream)
 
@@ -92,7 +135,7 @@ def recognize_faces_in_image_fast(file_stream, known_face_names, known_face_enco
     small_image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
 
     logging.debug("step3: Find all the faces and face encodings in the current frame of video")
-    face_locations = face_recognition.face_locations(small_image, model='hog')
+    face_locations = face_recognition.face_locations(small_image, model=model)
 
     logging.debug("step4: Get face encodings for any faces in the uploaded image")
     face_encodings = face_recognition.face_encodings(small_image, face_locations)

@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+    <title>CRDC TIPBU Face Analyze demo</title>
+    <meta charset='utf-8'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</head>
+
+<body>
+<div class="contentarea col-md-12">
+    <h1>
+        Photo capture demo
+    </h1>
+    <p>
+        Captured a png, upload for analysis.
+        Based on <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Taking_still_photos">Taking still photos with WebRTC</a>
+    </p>
+    <form id="my_form" method=POST enctype=multipart/form-data action="{{ url_for('upload_image') }}" target="id_iframe">
+    <div class="mb-3 col-md-4">
+
+    <input id="CEC ID" type="text" class="form-control input-sm" name="cec_id" placeholder="CEC ID">
+
+    </div>
+        <div class="md-3 col-md-4">
+            <label class="custom-control custom-checkbox">
+  <input type="checkbox" name="enable_face_plus" class="custom-control-input">
+  <span class="custom-control-indicator"></span>
+  <span class="custom-control-description">
+      <abbr title="Don't Enable this if any privacy concern" class="initialism">Enable Face++</abbr></span>
+</label>
+        </div>
+    <div class="camera">
+      <video id="video" autoplay="autoplay">Video stream not available.</video>
+      <button id="startbutton">Take photo</button> 
+    </div>
+    <canvas id="canvas">
+    </canvas>
+    <div class="output">
+      <img id="photo" alt="The screen capture will appear in this box."> 
+    </div>
+        <input id="my_img" name="photo" type=text>
+        <!--<input id="my_upload" type='submit' value='UPLOAD'>-->
+        <!--<button id="my_upload">Upload</button>-->
+    </form>
+    <iframe id="id_iframe" name="id_iframe">
+        Waiting result...
+    </iframe>
+
+</div>
+<script type="text/javascript">
+  (function() {
+  window.addEventListener('load', startup, false);
+})();
+
+</script>
+</body>
+
+
+</html>

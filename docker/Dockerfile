@@ -13,10 +13,10 @@ WORKDIR /root
 # create user
 RUN git clone https://github.com/davisking/dlib.git \
     && cd dlib \
-	&& mkdir build; cd build; cmake .. -DDLIB_USE_CUDA=0 -DUSE_AVX_INSTRUCTIONS=0; cmake --build . \
+	&& mkdir build; cd build; cmake .. -DDLIB_USE_CUDA=0 -DUSE_SSE4_INSTRUCTIONS=1 -DUSE_AVX_INSTRUCTIONS=0; cmake --build . \
     && cd .. \
-    && python setup.py install --no USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA \
-    && pip install face_recognition opencv-python flask
+    && python setup.py install --yes USE_SSE4_INSTRUCTIONS --no USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA \
+    && pip install face_recognition opencv-python flask pyOpenSSL
 
 # Setup start up scripts
 RUN mkdir /etc/dinit
@@ -32,4 +32,4 @@ RUN git clone https://xiaobizh@bitbucket-eng-sjc1.cisco.com/bitbucket/scm/~xiaob
 
 
 # Add container metadata
-LABEL description="Develop docker for python face_recognition" version="0.1"
+LABEL description="Develop docker for python face_recognition" version="0.2"
