@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # This is a simple web service that recognizes faces in uploaded images.
 # Upload an image file and it will check if the image contains faces
@@ -158,17 +158,15 @@ def upload_image():
         filename = uuid.uuid1()
         if 'cec_id' in request.form and request.form['cec_id'] != '':
             filename = "{}{}".format(filename,request.form['cec_id'])
-
-        file ="face_test/{}.png".format(filename)
-        file = os.path.join(APP_ROOT, file)
+        upg_photo = request.form['photo'].split(',')[-1]
+        file = os.path.join(APP_ROOT, "face_test/{}.png".format(filename))
         with open(file, "wb") as fh:
-            fh.write(base64.decodestring(request.form['photo'].split(',')[-1]))
-
+            fh.write(base64.b64decode(upg_photo))
         result = recognize_faces_in_image(file, known_face_names, known_face_encodings)
-        faces = result['face_data'].values()
+        faces = list(result['face_data'].values())
         faces.sort(key=lambda k:k['left'])
         if 'enable_face_plus' in request.form and request.form['enable_face_plus'] == 'on':
-            face_datas = get_external_result(file)
+            face_datas = get_external_result(upg_photo)
             for i in range(len(faces)):
                 face_datas[i]['name'] = faces[i]['name']
             return render_template('result.html',face_datas = face_datas)

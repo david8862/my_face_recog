@@ -46,6 +46,7 @@ eval docker run \
     --dns 64.104.123.245 \
     --dns 171.70.168.183 \
     -v /dev/null:/dev/null \
+    -v /face_test:/root/sl-face-service/face_test \
     $SLPROXY_OPTIONS \
     --rm \
     -ti \

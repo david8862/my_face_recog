@@ -1,60 +1,104 @@
-#video {
-border: 1px solid black;
-box-shadow: 2px 2px 3px black;
-width:640px;
-height:480px;
+
+@media screen and (min-width: 1000px) {
+/* hack! to detect non-touch devices */
+  div#links a {
+		line-height: 0.8em;
+  }
 }
 
-#photo {
-border: 1px solid black;
-box-shadow: 2px 2px 3px black;
-width:640px;
-height:480px;
+body {
+font-family: 'Roboto', sans-serif;
+margin: 0;
+padding: 1em;
+word-break: break-word;
+font-weight: 300;
 }
 
-#canvas {
-display:none;
-width:640px;
-height:480px;
+button {
+background-color: #d84a38;
+border: none;
+border-radius: 2px;
+color: white;
+font-family: 'Roboto', sans-serif;
+font-size: 0.8em;
+margin: 0 0 1em 0;
+padding: 0.5em 0.7em 0.6em 0.7em;
+}
+
+button:active {
+background-color: #cf402f;
+}
+
+button:hover {
+background-color: #cf402f;
+}
+
+button[disabled] {
+color: #ccc;
+}
+
+button[disabled]:hover {
+background-color: #d84a38;
+}
+
+canvas {
+  background-color: #ccc;
+  max-width: 100%;
+  width: 100%;
+  display:none
+}
+
+div#container {
+margin: 0 auto 0 auto;
+max-width: 40em;
+padding: 1em 1.5em 1.3em 1.5em;
+}
+
+
+html {
+/* avoid annoying page width change
+when moving from the home page */
+overflow-y: scroll;
+}
+
+video {
+  background: #222;
+  margin: 0 0 20px 0;
+  width: 100%;
+}
+
+@media screen and (max-width: 650px) {
+  .highlight {
+    font-size: 1em;
+    margin: 0 0 20px 0;
+    padding: 0.2em 1em;
+  }
+  h1 {
+    font-size: 24px;
+  }
+}
+
+@media screen and (max-width: 550px) {
+  button:active {
+    background-color: darkRed;
+  }
+  h1 {
+    font-size: 22px;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  h1 {
+    font-size: 20px;
+  }
 }
 
 #my_img {
 display:none;
 }
 
-.camera {
-width: 660px;
-display:inline-block;
-float:left
-}
-
-.output {
-width: 660px;
-display:inline-block;
-float:left
-}
-
-#startbutton {
-display:block;
-position:relative;
-margin-left:auto;
-margin-right:auto;
-bottom:32px;
-background-color: rgba(0, 150, 0, 0.5);
-border: 1px solid rgba(255, 255, 255, 0.7);
-box-shadow: 0px 0px 1px 2px rgba(0, 0, 0, 0.2);
-font-size: 14px;
-font-family: "Lucida Grande", "Arial", sans-serif;
-color: rgba(255, 255, 255, 1.0);
-}
-
-.contentarea {
-font-size: 16px;
-font-family: "Lucida Grande", "Arial", sans-serif;
-width: 1400px;
-}
 
 #id_iframe {
 float:left;
-width:1280px;
+width: 100%;
 }
