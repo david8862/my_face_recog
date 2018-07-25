@@ -1,45 +1,24 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Performs face alignment and calculates L2 distance between the embeddings of images."""
 
-# MIT License
-# 
-# Copyright (c) 2016 David Sandberg
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-from __future__ import absolute_import
-from __future__ import division
+#from __future__ import absolute_import
+#from __future__ import division
 from __future__ import print_function
 
 from scipy import misc
 import tensorflow as tf
 import numpy as np
 import sys
-import os, re
+import os
 import copy
 import argparse
 import facenet.src.facenet as facenet
 import facenet.src.align.detect_face as detect_face
+from utils import image_files_in_folder
 
 MODEL='models/20180402-114759.pb'
 
-def image_files_in_folder(folder):
-    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif|bmp)', f, flags=re.I)]
 
 def scan_known_people(known_people_folder, model=MODEL):
     known_names = []
@@ -79,49 +58,82 @@ def scan_known_people(known_people_folder, model=MODEL):
     return known_names, list(known_face_encodings)
 
 
-def main(args):
+def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings, model='hog'):
+    logging.debug("step1: Load the uploaded image file")
+    image = face_recognition.load_image_file(file_stream)
+    logging.debug("step2: Find all the faces ")
+    face_locations = face_recognition.face_locations(image, model=model)
+    logging.debug("step3: Get face encodings ")
+    face_encodings = face_recognition.face_encodings(image, face_locations)
+    logging.debug("step4: Get face encodings...done")
 
-    images, image_files = load_and_align_data(args.image_files, args.image_size, args.margin, args.gpu_memory_fraction)
-    with tf.Graph().as_default():
+    global PRE_DISTANCE
+    global PRE_FACE_NAMES
+    global PRE_LOCATIONS
 
-        with tf.Session() as sess:
-      
-            # Load the model
-            facenet.load_model(args.model)
-    
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+    # save a list of true or  false to indicate the object in PRE_LOCATIONS and in face_locations is the same object
+    same_object = []
+    if (len(face_locations) == len(PRE_LOCATIONS)):
+        for location,_location in zip(face_locations, PRE_LOCATIONS):
+            same_object.append(same_person(location,_location))
 
-            # Run forward pass to calculate embeddings
-            feed_dict = { images_placeholder: images, phase_train_placeholder:False }
-            emb = sess.run(embeddings, feed_dict=feed_dict)
-            
-            nrof_images = len(args.image_files)
 
-            print('Images:')
-            for i in range(nrof_images):
-                print('%1d: %s' % (i, args.image_files[i]))
-            print('')
+    face_names = []
+    face_distances = []
+    for face_encoding in face_encodings:
+        # See if the face is a match for the known face(s)
+        distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        result = list(distances <= 0.45)
+        index = np.argmin(distances)
+        name = "  "
+        distance = min(distances)
+        # If a match was found in known_face_encodings, just use the first one.
+        if True in result:
+            name = known_face_names[index]
 
-            print(type(emb))
-            print(emb.shape)
-            print(emb)
-            
-            # Print distance matrix
-            print('Distance matrix')
-            print('    ', end='')
-            for i in range(nrof_images):
-                print('    %1d     ' % i, end='')
-            print('')
-            for i in range(nrof_images):
-                print('%1d  ' % i, end='')
-                for j in range(nrof_images):
-                    #dist = np.sqrt(np.sum(np.square(np.subtract(emb[i,:], emb[j,:]))))
-                    dist = np.linalg.norm(emb[i,:] - emb[j,:])
-                    print('  %1.4f  ' % dist, end='')
-                print('')
+        face_names.append(name)
+        face_distances.append(distance)
+
+    # After get the result, then compare them with history
+    for i in range(len(face_names)):
+        if(len(same_object) > 0 and same_object[i] and distance > PRE_DISTANCE[i]):
+            logging.debug("===Use history result====")
+            logging.debug("Previous names list:{}".format(PRE_FACE_NAMES))
+            logging.debug("Current face list:{}".format(face_names))
+            face_names[i] = PRE_FACE_NAMES[i]
+            logging.debug("Previous face distance:{}".format(PRE_DISTANCE))
+            logging.debug("Current face distance:{}".format(face_distances))
+            face_distances[i] = PRE_DISTANCE[i]
+            logging.debug("After use history, current names:{}, current distance:{}".format(face_names,face_distances))
+    # save history result
+    PRE_FACE_NAMES = face_names
+    PRE_LOCATIONS = face_locations
+    PRE_DISTANCE = face_distances
+
+    face_found = False
+    if len(face_encodings) > 0:
+        face_found = True
+
+    result = {
+        "face_found_in_image": face_found,
+        "face_data": {},
+    }
+
+    i = 1
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
+        face = {
+            "name": name,
+            "top": top,
+            "right": right,
+            "bottom": bottom,
+            "left": left,
+                }
+        result['face_data']['face{}'.format(i)] = face
+        i = i + 1
+
+    logging.debug("step5: Return the result as json")
+    return result
+
             
             
 def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
@@ -161,19 +173,65 @@ def load_and_align_data(image_paths, image_size, margin, gpu_memory_fraction):
     images = np.stack(img_list)
     return images
 
-def parse_arguments(argv):
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument('model', type=str, 
-        help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
-    parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
-    parser.add_argument('--image_size', type=int,
-        help='Image size (height, width) in pixels.', default=160)
-    parser.add_argument('--margin', type=int,
-        help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
-    parser.add_argument('--gpu_memory_fraction', type=float,
-        help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
-    return parser.parse_args(argv)
 
-if __name__ == '__main__':
-    main(parse_arguments(sys.argv[1:]))
+#def main(args):
+
+    #images, image_files = load_and_align_data(args.image_files, args.image_size, args.margin, args.gpu_memory_fraction)
+    #with tf.Graph().as_default():
+
+        #with tf.Session() as sess:
+      
+            ## Load the model
+            #facenet.load_model(args.model)
+    
+            ## Get input and output tensors
+            #images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+            #embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+            #phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+
+            ## Run forward pass to calculate embeddings
+            #feed_dict = { images_placeholder: images, phase_train_placeholder:False }
+            #emb = sess.run(embeddings, feed_dict=feed_dict)
+            
+            #nrof_images = len(args.image_files)
+
+            #print('Images:')
+            #for i in range(nrof_images):
+                #print('%1d: %s' % (i, args.image_files[i]))
+            #print('')
+
+            #print(type(emb))
+            #print(emb.shape)
+            #print(emb)
+            
+            ## Print distance matrix
+            #print('Distance matrix')
+            #print('    ', end='')
+            #for i in range(nrof_images):
+                #print('    %1d     ' % i, end='')
+            #print('')
+            #for i in range(nrof_images):
+                #print('%1d  ' % i, end='')
+                #for j in range(nrof_images):
+                    ##dist = np.sqrt(np.sum(np.square(np.subtract(emb[i,:], emb[j,:]))))
+                    #dist = np.linalg.norm(emb[i,:] - emb[j,:])
+                    #print('  %1.4f  ' % dist, end='')
+                #print('')
+
+
+#def parse_arguments(argv):
+    #parser = argparse.ArgumentParser()
+    
+    #parser.add_argument('model', type=str, 
+        #help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
+    #parser.add_argument('image_files', type=str, nargs='+', help='Images to compare')
+    #parser.add_argument('--image_size', type=int,
+        #help='Image size (height, width) in pixels.', default=160)
+    #parser.add_argument('--margin', type=int,
+        #help='Margin for the crop around the bounding box (height, width) in pixels.', default=44)
+    #parser.add_argument('--gpu_memory_fraction', type=float,
+        #help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
+    #return parser.parse_args(argv)
+
+#if __name__ == '__main__':
+    #main(parse_arguments(sys.argv[1:]))

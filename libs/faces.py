@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, re, face_recognition, logging
+import os, face_recognition, logging
 import numpy as np
 import cv2
+from utils import image_files_in_folder, allowed_image, LOG_FORMAT
 
 PRE_LOCATIONS = []
 PRE_FACE_NAMES = []
@@ -17,14 +18,8 @@ def same_person(previous_location, new_location):
     return False
 
 
-
-# You can change this to any folder on your system
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
-def image_files_in_folder(folder):
-    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif|bmp)', f, flags=re.I)]
 
 def scan_known_people(known_people_folder, model=None):
     known_names = []
@@ -47,9 +42,6 @@ def scan_known_people(known_people_folder, model=None):
 
     return known_names, known_face_encodings
 
-def allowed_image(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings, model='hog'):
     logging.debug("step1: Load the uploaded image file")
