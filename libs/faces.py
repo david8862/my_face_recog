@@ -24,16 +24,17 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 def image_files_in_folder(folder):
-    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif)', f, flags=re.I)]
+    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif|bmp)', f, flags=re.I)]
 
-def scan_known_people(known_people_folder):
+def scan_known_people(known_people_folder, model=None):
     known_names = []
     known_face_encodings = []
 
     for file in image_files_in_folder(known_people_folder):
         basename = os.path.splitext(os.path.basename(file))[0]
         image = face_recognition.load_image_file(file)
-        encodings = face_recognition.face_encodings(image)
+        face_locations = face_recognition.face_locations(image, model='hog')
+        encodings = face_recognition.face_encodings(image, face_locations)
 
         if len(encodings) > 1:
             print("WARNING: More than one face found in {}. Only considering the first face.".format(file))
