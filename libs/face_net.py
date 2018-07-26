@@ -49,22 +49,27 @@ def get_aligned_face(image, face_location, face_size=FACE_SIZE, margin=MARGIN):
     bb[2] = np.minimum(face_location[2]+margin/2, image_size[1])
     bb[3] = np.minimum(face_location[3]+margin/2, image_size[0])
     cropped = image[bb[1]:bb[3],bb[0]:bb[2],:]
-    aligned = misc.imresize(cropped, (face_size, face_size), interp='bilinear')
-    prewhitened = facenet.prewhiten(aligned)
+    resized = misc.imresize(cropped, (face_size, face_size), interp='bilinear')
+    prewhitened = facenet.prewhiten(resized)
     return prewhitened
 
 
 def get_face_images(image, face_locations):
     img_list = []
+    images = []
     for face_location in face_locations:
         aligned_face = get_aligned_face(image, face_location)
         img_list.append(aligned_face)
 
-    images = np.stack(img_list)
+    if len(img_list) > 0:
+        images = np.stack(img_list)
     return images
 
 
 def get_face_encodings(images, model=MODEL):
+    face_encodings = []
+    if len(images) == 0:
+        return face_encodings
     with tf.Graph().as_default():
         with tf.Session() as sess:
             # Load the model
@@ -90,6 +95,7 @@ def get_face_distance(face_encodings, face_to_compare):
 def load_and_align_db(image_paths):
     tmp_image_paths=copy.copy(image_paths)
     img_list = []
+    images = []
     
     for image_file in tmp_image_paths:
         image = load_image_file(image_file)
@@ -102,7 +108,8 @@ def load_and_align_db(image_paths):
             print("WARNING: More than one face found in {}. Only considering the first face.".format(file))
         aligned_face = get_aligned_face(image, face_locations[0])
         img_list.append(aligned_face)
-    images = np.stack(img_list)
+    if len(img_list) > 0:
+        images = np.stack(img_list)
     return images
 
 
@@ -158,10 +165,10 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
     for (left, top, right, bottom), name in zip(face_locations, face_names):
         face = {
             "name": name,
-            "top": top,
-            "right": right,
-            "bottom": bottom,
-            "left": left,
+            "top": int(top),
+            "right": int(right),
+            "bottom": int(bottom),
+            "left": int(left),
                 }
         result['face_data']['face{}'.format(i)] = face
         i = i + 1
