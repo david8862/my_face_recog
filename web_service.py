@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# This is a simple web service that recognizes faces in uploaded images.
+# This is a secure web service that recognizes faces in uploaded images.
 # Upload an image file and it will check if the image contains faces
 # of CRDC TIPBU member and the face location in image.
 # The result is returned as json. For example:
 #
-# $ curl -XPOST -F "file=@test.jpg" http://0.0.0.0:5001/phoneapi
+# $ curl -k -XPOST -F "file=@test.jpg" https://0.0.0.0:5001/phoneapi
 #
 # Returns:
 #
