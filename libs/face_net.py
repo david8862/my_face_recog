@@ -10,7 +10,7 @@ import numpy as np
 import os, copy, logging
 import facenet.src.facenet as facenet
 import facenet.src.align.detect_face as detect_face
-from utils import image_files_in_folder, LOG_FORMAT
+from .utils import image_files_in_folder, LOG_FORMAT
 
 MODEL=os.path.split(os.path.realpath(__file__))[0] + '/models/20180402-114759.pb'
 FACE_SIZE=160

@@ -4,7 +4,7 @@
 import os, face_recognition, logging
 import numpy as np
 import cv2
-from utils import image_files_in_folder, LOG_FORMAT
+from .utils import image_files_in_folder, LOG_FORMAT
 
 PRE_LOCATIONS = []
 PRE_FACE_NAMES = []
