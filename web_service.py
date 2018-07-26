@@ -28,9 +28,9 @@
 import numpy as np
 import cv2, PIL, os
 from flask import Flask, jsonify, request, redirect, make_response, render_template, Response
-from libs.faces import recognize_faces_in_image, allowed_image
-from libs.faces import scan_known_people
-#from libs.face_net import scan_known_people
+from libs.faces import scan_known_people, recognize_faces_in_image
+#from libs.face_net import scan_known_people, recognize_faces_in_image
+from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
 
 
@@ -177,5 +177,5 @@ def upload_image():
 
 if __name__ == "__main__":
     face_db = os.path.join(APP_ROOT, "face_db")
-    known_face_names, known_face_encodings = scan_known_people(face_db, model='libs/models/20180402-114759.pb')
+    known_face_names, known_face_encodings = scan_known_people(face_db)
     app.run(host='0.0.0.0', port=5001, ssl_context='adhoc')

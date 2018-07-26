@@ -4,7 +4,7 @@
 import os, face_recognition, logging
 import numpy as np
 import cv2
-from utils import image_files_in_folder, allowed_image, LOG_FORMAT
+from utils import image_files_in_folder, LOG_FORMAT
 
 PRE_LOCATIONS = []
 PRE_FACE_NAMES = []
@@ -19,6 +19,7 @@ def same_person(previous_location, new_location):
 
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+DISTANCE_THRESHOLD=0.45
 
 
 def scan_known_people(known_people_folder, model=None):
@@ -68,7 +69,7 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
     for face_encoding in face_encodings:
         # See if the face is a match for the known face(s)
         distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-        result = list(distances <= 0.45)
+        result = list(distances <= DISTANCE_THRESHOLD)
         index = np.argmin(distances)
         name = "  "
         distance = min(distances)
