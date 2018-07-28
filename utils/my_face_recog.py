@@ -16,8 +16,11 @@ import click
 import os
 import re
 
+DISTANCE_THRESHOLD=0.45
+NUM_JITTERS=3
+
 def image_files_in_folder(folder):
-    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png)', f, flags=re.I)]
+    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif|bmp)', f, flags=re.I)]
 
 def scan_known_people(known_people_folder):
     known_names = []
@@ -26,7 +29,9 @@ def scan_known_people(known_people_folder):
     for file in image_files_in_folder(known_people_folder):
         basename = os.path.splitext(os.path.basename(file))[0]
         img = face_recognition.load_image_file(file)
-        encodings = face_recognition.face_encodings(img)
+        face_locations = face_recognition.face_locations(img, model='hog')
+        #face_locations = face_recognition.face_locations(img, model='cnn')
+        encodings = face_recognition.face_encodings(img, face_locations, num_jitters=NUM_JITTERS)
 
         if len(encodings) > 1:
             click.echo("WARNING: More than one face found in {}. Only considering the first face.".format(file))
@@ -67,13 +72,13 @@ def face_recog():
             face_locations = face_recognition.face_locations(rgb_small_frame, model='hog')
             #face_locations = face_recognition.face_locations(rgb_small_frame, model='cnn')
             face_landmarks_list = face_recognition.face_landmarks(rgb_small_frame)
-            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations, num_jitters=NUM_JITTERS)
 
             face_names = []
             for face_encoding in face_encodings:
                 # See if the face is a match for the known face(s)
                 distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-                result = list(distances <= 0.45)
+                result = list(distances <= DISTANCE_THRESHOLD)
                 index = np.argmin(distances)
                 name = "Unknown"
 

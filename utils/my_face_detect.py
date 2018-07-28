@@ -25,6 +25,7 @@ def face_detect():
         if process_this_frame:
             # Find all the faces and face encodings in the current frame of video
             face_locations = face_recognition.face_locations(small_frame, model='hog')
+            #face_locations = face_recognition.face_locations(small_frame, model='cnn')
             face_landmarks_list = face_recognition.face_landmarks(small_frame)
         process_this_frame = not process_this_frame
     

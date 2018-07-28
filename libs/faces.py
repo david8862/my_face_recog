@@ -20,6 +20,7 @@ def same_person(previous_location, new_location):
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 DISTANCE_THRESHOLD=0.45
+NUM_JITTERS=3
 
 
 def scan_known_people(known_people_folder, model=None):
@@ -30,7 +31,8 @@ def scan_known_people(known_people_folder, model=None):
         basename = os.path.splitext(os.path.basename(file))[0]
         image = face_recognition.load_image_file(file)
         face_locations = face_recognition.face_locations(image, model='hog')
-        encodings = face_recognition.face_encodings(image, face_locations)
+        #face_locations = face_recognition.face_locations(image, model='cnn')
+        encodings = face_recognition.face_encodings(image, face_locations, num_jitters=NUM_JITTERS)
 
         if len(encodings) > 1:
             print("WARNING: More than one face found in {}. Only considering the first face.".format(file))
@@ -49,8 +51,9 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
     image = face_recognition.load_image_file(file_stream)
     logging.debug("step2: Find all the faces ")
     face_locations = face_recognition.face_locations(image, model=model)
+    #face_locations = face_recognition.face_locations(image, model='cnn')
     logging.debug("step3: Get face encodings ")
-    face_encodings = face_recognition.face_encodings(image, face_locations)
+    face_encodings = face_recognition.face_encodings(image, face_locations, num_jitters=NUM_JITTERS)
     logging.debug("step4: Get face encodings...done")
 
     global PRE_DISTANCE
@@ -92,9 +95,9 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
             face_distances[i] = PRE_DISTANCE[i]
             logging.debug("After use history, current names:{}, current distance:{}".format(face_names,face_distances))
     # save history result
-    PRE_FACE_NAMES = face_names
-    PRE_LOCATIONS = face_locations
-    PRE_DISTANCE = face_distances
+    #PRE_FACE_NAMES = face_names
+    #PRE_LOCATIONS = face_locations
+    #PRE_DISTANCE = face_distances
 
     face_found = False
     if len(face_encodings) > 0:
@@ -130,9 +133,10 @@ def recognize_faces_in_image_fast(file_stream, known_face_names, known_face_enco
 
     logging.debug("step3: Find all the faces and face encodings in the current frame of video")
     face_locations = face_recognition.face_locations(small_image, model=model)
+    #face_locations = face_recognition.face_locations(small_image, model='cnn')
 
     logging.debug("step4: Get face encodings for any faces in the uploaded image")
-    face_encodings = face_recognition.face_encodings(small_image, face_locations)
+    face_encodings = face_recognition.face_encodings(small_image, face_locations, num_jitters=NUM_JITTERS)
 
 
     logging.debug("step5: find out all face_names")
