@@ -1,6 +1,6 @@
 ## Python Face Recognition framework based on face_recognition
 
-A web service for high-quality face recognition and some sample utility based on python "face_recognition" package, which is a good wrapper of dlib C++ library.
+A secure web service for high-quality face recognition and some sample utility based on python "face_recognition" package, which is a good wrapper of dlib C++ library.
 
 * web_service.py: web service for face recognition
 * utils/my_face_detect.py: webcam live face detect & landmark display sample running on Macbook
@@ -19,3 +19,6 @@ python3 setup.py install --yes USE_SSE4_INSTRUCTIONS --no USE_AVX_INSTRUCTIONS -
 popd
 python3 web_service.py
 ```
+Basic service: https://localhost:5001/
+WebRTC image capture tool: https://localhost:5001/capture
+
