@@ -1,0 +1,15 @@
+face_recognition
+opencv-python
+pillow
+flask
+requests
+pyOpenSSL
+tensorflow==1.7
+scipy
+scikit-learn
+opencv-python
+h5py
+matplotlib
+Pillow
+requests
+psutil

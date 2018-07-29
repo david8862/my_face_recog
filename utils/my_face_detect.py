@@ -6,6 +6,7 @@
 import face_recognition
 import cv2
 
+MODEL="large"
 
 def face_detect():
     # Get a reference to webcam #0 (the default one)
@@ -26,7 +27,7 @@ def face_detect():
             # Find all the faces and face encodings in the current frame of video
             face_locations = face_recognition.face_locations(small_frame, model='hog')
             #face_locations = face_recognition.face_locations(small_frame, model='cnn')
-            face_landmarks_list = face_recognition.face_landmarks(small_frame)
+            face_landmarks_list = face_recognition.face_landmarks(small_frame, model=MODEL)
         process_this_frame = not process_this_frame
     
         # Display the results
@@ -41,17 +42,26 @@ def face_detect():
 
         for face_landmarks in face_landmarks_list:
             # Print the location of each facial feature in this image
-            facial_features = [
-                'chin',
-                'left_eyebrow',
-                'right_eyebrow',
-                'nose_bridge',
-                'nose_tip',
-                'left_eye',
-                'right_eye',
-                'top_lip',
-                'bottom_lip'
-            ]
+            if MODEL == 'large':
+                facial_features = [
+                    'chin',
+                    'left_eyebrow',
+                    'right_eyebrow',
+                    'nose_bridge',
+                    'nose_tip',
+                    'left_eye',
+                    'right_eye',
+                    'top_lip',
+                    'bottom_lip'
+                ]
+            elif MODEL == 'small':
+                 facial_features = [
+                    'nose_tip',
+                    'left_eye',
+                    'right_eye',
+                ]   
+            else:
+                raise ValueError("Invalid landmarks model type. Supported models are ['small', 'large'].")
 
             for facial_feature in facial_features:
             #for facial_feature in ['top_lip', 'bottom_lip']:
