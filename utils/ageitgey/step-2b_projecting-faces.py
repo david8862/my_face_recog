@@ -8,6 +8,8 @@ from skimage import io
 # http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 predictor_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/shape_predictor_68_face_landmarks.dat"
 
+#LANDMARKIND=openface.AlignDlib.OUTER_EYES_AND_NOSE
+LANDMARKIND=openface.AlignDlib.INNER_EYES_AND_BOTTOM_LIP
 
 def main(args):
     # Take the image file name from the command line
@@ -43,7 +45,7 @@ def main(args):
         pose_landmarks = face_pose_predictor(image, face_rect)
 
         # Use openface to calculate and perform the face alignment
-        alignedFace = face_aligner.align(534, image, face_rect, landmarkIndices=openface.AlignDlib.OUTER_EYES_AND_NOSE)
+        alignedFace = face_aligner.align(534, image, face_rect, landmarkIndices=LANDMARKIND)
 
         # Save the aligned image to a file
         #cv2.imwrite("aligned_face_{}.jpg".format(i), alignedFace)
