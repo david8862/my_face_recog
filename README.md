@@ -20,5 +20,6 @@ popd
 python3 web_service.py
 ```
 Basic service: https://localhost:5001/
+
 WebRTC image capture tool: https://localhost:5001/capture
 

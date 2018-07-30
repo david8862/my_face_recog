@@ -7,6 +7,7 @@ pyOpenSSL
 tensorflow==1.7
 scipy
 scikit-learn
+scikit-image
 opencv-python
 h5py
 matplotlib
