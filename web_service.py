@@ -13,13 +13,13 @@
 #    "face_found_in_image": true,
 #    "face_data": {
 #        "face1": {
-#            "name": "conli", 
-#            "bottom": 494, 
-#            "left": 93, 
-#            "right": 129, 
+#            "name": "conli",
+#            "bottom": 494,
+#            "left": 93,
+#            "right": 129,
 #            "top": 458
-#        }, 
-#    }, 
+#        },
+#    },
 #}
 #
 # This example is based on the Flask file upload example: http://flask.pocoo.org/docs/0.12/patterns/fileuploads/

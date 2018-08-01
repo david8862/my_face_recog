@@ -19,6 +19,19 @@ DISTANCE_THRESHOLD=1.0
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
+pnet = None
+rnet = None
+onet = None
+
+def init_face_detection_network():
+    global pnet, rnet, onet
+    with tf.Graph().as_default():
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+        with sess.as_default():
+            pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
+
+
 def load_image_file(file_stream, mode='RGB'):
     im = PIL.Image.open(file_stream)
     if mode:
@@ -29,12 +42,6 @@ def get_face_locations(image, model=None):
     minsize = 20 # minimum size of face
     threshold = [ 0.6, 0.7, 0.7 ]  # three steps's threshold
     factor = 0.709 # scale factor
-
-    with tf.Graph().as_default():
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
-        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-        with sess.as_default():
-            pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
 
     bounding_boxes, _ = detect_face.detect_face(image, minsize, pnet, rnet, onet, threshold, factor)
     face_locations = bounding_boxes[:,0:4]
@@ -74,7 +81,7 @@ def get_face_encodings(images, model=MODEL):
         with tf.Session() as sess:
             # Load the model
             facenet.load_model(model)
-    
+
             # Get input and output tensors
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
             embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
@@ -84,7 +91,6 @@ def get_face_encodings(images, model=MODEL):
             feed_dict = { images_placeholder: images, phase_train_placeholder:False }
             face_encodings = sess.run(embeddings, feed_dict=feed_dict)
     return face_encodings
-
 
 def get_face_distance(face_encodings, face_to_compare):
     if len(face_encodings) == 0:
@@ -96,7 +102,7 @@ def load_and_align_db(image_paths):
     tmp_image_paths=copy.copy(image_paths)
     img_list = []
     images = []
-    
+
     for image_file in tmp_image_paths:
         image = load_image_file(image_file)
         face_locations = get_face_locations(image)
@@ -116,6 +122,7 @@ def load_and_align_db(image_paths):
 def scan_known_people(known_people_folder):
     known_names = []
     known_face_encodings = []
+    init_face_detection_network()
 
     image_files = image_files_in_folder(known_people_folder)
     aligned_images = load_and_align_db(image_files)
@@ -175,4 +182,4 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
 
     logging.debug("step5: Return the result as json")
     return result
-    
+
