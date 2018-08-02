@@ -28,8 +28,8 @@
 import numpy as np
 import cv2, PIL, os
 from flask import Flask, jsonify, request, redirect, make_response, render_template, Response
-#from libs.faces import init_model, scan_known_people, recognize_faces_in_image
-from libs.face_net import init_model, scan_known_people, recognize_faces_in_image
+from libs.faces import init_model, scan_known_people, recognize_faces_in_image
+#from libs.face_net import init_model, scan_known_people, recognize_faces_in_image
 from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
 
