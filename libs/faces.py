@@ -22,6 +22,8 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 DISTANCE_THRESHOLD=0.45
 NUM_JITTERS=3
 
+def init_model():
+    return None
 
 def scan_known_people(known_people_folder, model=None):
     known_names = []

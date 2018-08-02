@@ -23,6 +23,9 @@ pnet = None
 rnet = None
 onet = None
 
+def init_model():
+    init_face_detection_network()
+
 def init_face_detection_network():
     global pnet, rnet, onet
     with tf.Graph().as_default():
@@ -44,18 +47,18 @@ def get_face_locations(image, model=None):
     factor = 0.709 # scale factor
 
     bounding_boxes, _ = detect_face.detect_face(image, minsize, pnet, rnet, onet, threshold, factor)
-    face_locations = bounding_boxes[:,0:4]
-    return face_locations.astype(int)
+    bounding_boxes = bounding_boxes[:,0:4]
+    return [[top, right, bottom, left] for (left, top, right, bottom) in bounding_boxes]
 
 
 def get_aligned_face(image, face_location, face_size=FACE_SIZE, margin=MARGIN):
     image_size = np.asarray(image.shape)[0:2]
     bb = np.zeros(4, dtype=np.int32)
     bb[0] = np.maximum(face_location[0]-margin/2, 0)
-    bb[1] = np.maximum(face_location[1]-margin/2, 0)
-    bb[2] = np.minimum(face_location[2]+margin/2, image_size[1])
-    bb[3] = np.minimum(face_location[3]+margin/2, image_size[0])
-    cropped = image[bb[1]:bb[3],bb[0]:bb[2],:]
+    bb[1] = np.minimum(face_location[1]+margin/2, image_size[1])
+    bb[2] = np.minimum(face_location[2]+margin/2, image_size[0])
+    bb[3] = np.maximum(face_location[3]-margin/2, 0)
+    cropped = image[bb[0]:bb[2],bb[3]:bb[1],:]
     resized = misc.imresize(cropped, (face_size, face_size), interp='bilinear')
     prewhitened = facenet.prewhiten(resized)
     return prewhitened
@@ -122,7 +125,6 @@ def load_and_align_db(image_paths):
 def scan_known_people(known_people_folder):
     known_names = []
     known_face_encodings = []
-    init_face_detection_network()
 
     image_files = image_files_in_folder(known_people_folder)
     aligned_images = load_and_align_db(image_files)
@@ -169,7 +171,7 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
     }
 
     i = 1
-    for (left, top, right, bottom), name in zip(face_locations, face_names):
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
         face = {
             "name": name,
             "top": int(top),
