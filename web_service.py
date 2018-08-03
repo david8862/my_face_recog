@@ -7,6 +7,8 @@
 #
 # $ curl -k -XPOST -F "file=@test.jpg" https://0.0.0.0:5001/phoneapi
 #
+# $ curl -m 1 -k -F "mac=5006AB802B51" -F "cec=xiaobizh" https://localhost:5001/emlogin/demo
+#
 # Returns:
 #
 #{
@@ -32,6 +34,7 @@ from libs.faces import init_model, scan_known_people, recognize_faces_in_image
 #from libs.face_net import init_model, scan_known_people, recognize_faces_in_image
 from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
+from libs.cucm import Cucm
 
 
 app = Flask(__name__)
@@ -41,6 +44,45 @@ origin_image_buffer = np.zeros(5)
 result_image_buffer = np.zeros(5)
 known_face_names = []
 known_face_encodings = []
+
+
+def update_cucm_info(phone_mac, cec_id):
+    cucm_host = "10.74.63.21"
+    username = "1"
+    password = "1"
+
+    data_dict  = {
+        "xiaobizh": {"DN": "10710", "name": "Xiaobin Zhang"},
+        "hoqiu": {"DN": "10711", "name": "Fans Qiu"},
+        "jujin": {"DN": "10712", "name": "Jun Jin"},
+        "jiewa2": {"DN": "10713", "name": "Jie Wang"},
+    }
+
+    line_index = "Line [1] -"
+
+    my_cucm = Cucm(host=cucm_host, cm_username=username, cm_password=password)
+    my_phone = my_cucm.find_phone(phone_mac)
+    my_cucm.change_line_dn(my_phone, line_index, data_dict[cec_id]["DN"])
+    my_cucm.change_line_label(my_phone, data_dict[cec_id]["DN"], data_dict[cec_id]["name"])
+    my_cucm.quit()
+
+
+@app.route('/emlogin/demo', methods=['GET', 'POST'])
+def emlogin_demo():
+    if request.method != 'POST':
+        return 'No data post!\n'
+
+    if 'mac' not in request.form:
+        return 'No MAC addr received!\n'
+    if 'cec' not in request.form:
+        return 'No CEC ID received!\n'
+
+    cec = request.form['cec']
+    mac = request.form['mac']
+    update_cucm_info(mac, cec)
+
+    return 'Update successfully!\n'
+
 
 @app.route('/phoneapi', methods=['GET', 'POST'])
 def handle_image():

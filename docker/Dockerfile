@@ -18,6 +18,9 @@ RUN cd /usr/local \
     && tar xvjf firefox-61.0.1.tar.bz2 \
     && ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
+# Change workdir
+WORKDIR /root
+
 # build dlib & face_recognition env
 RUN git clone https://github.com/davisking/dlib.git \
     && cd dlib \
