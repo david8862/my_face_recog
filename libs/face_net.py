@@ -8,6 +8,8 @@ import PIL.Image
 import tensorflow as tf
 import numpy as np
 import os, copy, logging
+from queue import Queue
+from threading import Thread
 import facenet.src.facenet as facenet
 import facenet.src.align.detect_face as detect_face
 from .utils import image_files_in_folder, LOG_FORMAT
@@ -22,9 +24,13 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 pnet = None
 rnet = None
 onet = None
+encoding_in_queue = None
+encoding_out_queue = None
+
 
 def init_model():
     init_face_detection_network()
+    init_face_encoding_thread()
 
 def init_face_detection_network():
     global pnet, rnet, onet
@@ -33,6 +39,43 @@ def init_face_detection_network():
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         with sess.as_default():
             pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
+
+def init_face_encoding_thread(model=MODEL):
+    global encoding_in_queue,encoding_out_queue
+    encoding_in_queue = Queue()
+    encoding_out_queue = Queue()
+    enc_thread = Thread(target=face_encoding_thread, args=(encoding_in_queue,encoding_out_queue,model))
+    enc_thread.start()
+
+# Thread to handle face encoding request
+def face_encoding_thread(in_queue, out_queue, model):
+    face_encodings = []
+    with tf.Graph().as_default():
+        sess = tf.Session()
+        with sess.as_default():
+            # Load the model
+            facenet.load_model(model)
+        while True:
+            images = in_queue.get()
+            # Get input and output tensors
+            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+            # Run forward pass to calculate embeddings
+            feed_dict = { images_placeholder: images, phase_train_placeholder:False }
+            face_encodings = sess.run(embeddings, feed_dict=feed_dict)
+            out_queue.put(face_encodings)
+
+
+def get_face_encodings(images, model=MODEL):
+    global encoding_in_queue,encoding_out_queue
+    face_encodings = []
+    if len(images) == 0:
+        return face_encodings
+
+    encoding_in_queue.put(images)
+    face_encodings = encoding_out_queue.get()
+    return face_encodings
 
 
 def load_image_file(file_stream, mode='RGB'):
@@ -75,25 +118,6 @@ def get_face_images(image, face_locations):
         images = np.stack(img_list)
     return images
 
-
-def get_face_encodings(images, model=MODEL):
-    face_encodings = []
-    if len(images) == 0:
-        return face_encodings
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            # Load the model
-            facenet.load_model(model)
-
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-
-            # Run forward pass to calculate embeddings
-            feed_dict = { images_placeholder: images, phase_train_placeholder:False }
-            face_encodings = sess.run(embeddings, feed_dict=feed_dict)
-    return face_encodings
 
 def get_face_distance(face_encodings, face_to_compare):
     if len(face_encodings) == 0:

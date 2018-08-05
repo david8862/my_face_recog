@@ -51,7 +51,7 @@ def update_cucm_info(phone_mac, cec_id):
     username = "1"
     password = "1"
 
-    data_dict  = {
+    data_dict = {
         "xiaobizh": {"DN": "10710", "name": "Xiaobin Zhang"},
         "hoqiu": {"DN": "10711", "name": "Fans Qiu"},
         "jujin": {"DN": "10712", "name": "Jun Jin"},
