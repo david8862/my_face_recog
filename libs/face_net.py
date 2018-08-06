@@ -10,14 +10,21 @@ import numpy as np
 import os, copy, logging
 from queue import Queue
 from threading import Thread
+import dlib
+import openface
 import facenet.src.facenet as facenet
 import facenet.src.align.detect_face as detect_face
 from .utils import image_files_in_folder, LOG_FORMAT
 
 MODEL=os.path.split(os.path.realpath(__file__))[0] + '/models/20180402-114759.pb'
+PREDICTOR_MODEL=os.path.split(os.path.realpath(__file__))[0] + '/models/shape_predictor_68_face_landmarks.dat'
 FACE_SIZE=160
 MARGIN=44
 DISTANCE_THRESHOLD=1.0
+
+face_aligner = None
+#LANDMARKIND=openface.AlignDlib.OUTER_EYES_AND_NOSE
+LANDMARKIND=openface.AlignDlib.INNER_EYES_AND_BOTTOM_LIP
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
@@ -27,9 +34,9 @@ onet = None
 encoding_in_queue = None
 encoding_out_queue = None
 
-
 def init_model():
     init_face_detection_network()
+    init_face_aligner()
     init_face_encoding_thread()
 
 def init_face_detection_network():
@@ -39,6 +46,10 @@ def init_face_detection_network():
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
         with sess.as_default():
             pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
+
+def init_face_aligner():
+    global face_aligner
+    face_aligner = openface.AlignDlib(PREDICTOR_MODEL)
 
 def init_face_encoding_thread(model=MODEL):
     global encoding_in_queue,encoding_out_queue
@@ -91,7 +102,17 @@ def get_face_locations(image, model=None):
 
     bounding_boxes, _ = detect_face.detect_face(image, minsize, pnet, rnet, onet, threshold, factor)
     bounding_boxes = bounding_boxes[:,0:4]
-    return [[top, right, bottom, left] for (left, top, right, bottom) in bounding_boxes]
+    return [[int(top), int(right), int(bottom), int(left)] for (left, top, right, bottom) in bounding_boxes]
+
+
+#def get_aligned_face(image, face_location, face_size=FACE_SIZE, margin=MARGIN):
+    #global face_aligner
+    ## face_location : [top, right, bottom, left]
+    #face_rect = dlib.rectangle(left=face_location[3], top=face_location[0], right=face_location[1], bottom=face_location[2])
+    ## Use openface to calculate and perform the face alignment
+    #alignedFace = face_aligner.align(FACE_SIZE, image, face_rect, landmarkIndices=LANDMARKIND)
+    #prewhitened = facenet.prewhiten(alignedFace)
+    #return prewhitened
 
 
 def get_aligned_face(image, face_location, face_size=FACE_SIZE, margin=MARGIN):
@@ -198,10 +219,10 @@ def recognize_faces_in_image(file_stream, known_face_names, known_face_encodings
     for (top, right, bottom, left), name in zip(face_locations, face_names):
         face = {
             "name": name,
-            "top": int(top),
-            "right": int(right),
-            "bottom": int(bottom),
-            "left": int(left),
+            "top": top,
+            "right": right,
+            "bottom": bottom,
+            "left": left,
                 }
         result['face_data']['face{}'.format(i)] = face
         i = i + 1

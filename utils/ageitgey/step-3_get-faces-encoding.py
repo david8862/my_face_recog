@@ -9,9 +9,9 @@ from skimage import io
 # http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 # http://dlib.net/files/shape_predictor_5_face_landmarks.dat.bz2
 # http://dlib.net/files/dlib_face_recognition_resnet_model_v1.dat.bz2
-predictor_68_point_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/shape_predictor_68_face_landmarks.dat"
-predictor_5_point_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/shape_predictor_5_face_landmarks.dat"
-face_recognition_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/dlib_face_recognition_resnet_model_v1.dat"
+predictor_68_point_model = "/Users/xiaobizh/.local/virtualenvs/py3ml/lib/python3.6/site-packages/face_recognition_models/models/shape_predictor_68_face_landmarks.dat"
+predictor_5_point_model = "/Users/xiaobizh/.local/virtualenvs/py3ml/lib/python3.6/site-packages/face_recognition_models/models/shape_predictor_5_face_landmarks.dat"
+face_recognition_model = "/Users/xiaobizh/.local/virtualenvs/py3ml/lib/python3.6/site-packages/face_recognition_models/models/dlib_face_recognition_resnet_model_v1.dat"
 
 MODEL='large'
 

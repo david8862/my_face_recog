@@ -6,7 +6,7 @@ from skimage import io
 
 # You can download the required pre-trained face detection model here:
 # http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
-predictor_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/shape_predictor_68_face_landmarks.dat"
+predictor_model = "/Users/xiaobizh/.local/virtualenvs/py3ml/lib/python3.6/site-packages/face_recognition_models/models/shape_predictor_68_face_landmarks.dat"
 
 #LANDMARKIND=openface.AlignDlib.OUTER_EYES_AND_NOSE
 LANDMARKIND=openface.AlignDlib.INNER_EYES_AND_BOTTOM_LIP

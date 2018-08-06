@@ -6,7 +6,7 @@ from skimage import io
 
 # You can download the required pre-trained face detection model here:
 # http://dlib.net/files/mmod_human_face_detector.dat.bz2
-cnn_face_detector_model = "/Users/xiaobizh/.local/virtualenvs/ml/lib/python2.7/site-packages/face_recognition_models/models/mmod_human_face_detector.dat"
+cnn_face_detector_model = "/Users/xiaobizh/.local/virtualenvs/py3ml/lib/python3.6/site-packages/face_recognition_models/models/mmod_human_face_detector.dat"
 
 MODEL='hog'
 
