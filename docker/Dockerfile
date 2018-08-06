@@ -40,8 +40,10 @@ COPY dinit/scripts /etc/dinit
 CMD ["bash"]
 ENTRYPOINT ["/sbin/dinit", "-c", "-s", "/etc/dinit" ]
 
-RUN git clone https://github.com/david8862/my_face_recog.git
-
+RUN git clone https://github.com/david8862/my_face_recog.git \
+    && cd my_face_recog/libs/models/ \
+    && wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 \
+    && bzip2 -d shape_predictor_68_face_landmarks.dat.bz2
 
 # Add container metadata
 LABEL description="Develop docker for python face_recognition" version="0.2"
