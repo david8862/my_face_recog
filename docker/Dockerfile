@@ -13,27 +13,24 @@ RUN apt update \
     && rm -rf geckodriver-v0.21.0-linux64.tar.gz
 
 # Install firefox 61.0.1
-RUN pushd /usr/local \
+RUN cd /usr/local \
     && wget http://ftp.mozilla.org/pub/firefox/releases/61.0.1/linux-x86_64/en-US/firefox-61.0.1.tar.bz2 \
     && tar xvjf firefox-61.0.1.tar.bz2 \
-    && ln -s /usr/local/firefox/firefox /usr/bin/firefox \
-    && popd
+    && ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
 # build dlib & face_recognition env
 RUN git clone https://github.com/davisking/dlib.git \
-    && pushd dlib \
+    && cd dlib \
 	&& mkdir build; cd build; cmake .. -DDLIB_USE_CUDA=0 -DUSE_SSE4_INSTRUCTIONS=1 -DUSE_AVX_INSTRUCTIONS=0; cmake --build . \
     && cd .. \
     && python3 setup.py install --yes USE_SSE4_INSTRUCTIONS --no USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA \
-    && pip3 install face_recognition opencv-python pillow flask requests pyOpenSSL selenium \
-    && popd
+    && pip3 install face_recognition opencv-python pillow flask requests pyOpenSSL selenium
 
 # build facenet & openface env
 RUN git clone https://github.com/cmusatyalab/openface.git \
-    && pushd openface \
+    && cd openface \
     && python3 setup.py install \
-    && pip3 install tensorflow==1.7 scipy scikit-learn opencv-python h5py matplotlib Pillow requests psutil facenet \
-    && popd
+    && pip3 install tensorflow==1.7 scipy scikit-learn opencv-python h5py matplotlib Pillow requests psutil facenet
 
 # Setup start up scripts
 RUN mkdir /etc/dinit
