@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time, os, face_recognition, logging
+import os, re, face_recognition, logging
 from threading import Timer, Lock
 import numpy as np
 import cv2
-from .utils import image_files_in_folder, LOG_FORMAT
+#from .utils import image_files_in_folder, LOG_FORMAT
+
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+
+def image_files_in_folder(folder):
+    return [os.path.join(folder, f) for f in os.listdir(folder) if re.match(r'.*\.(jpg|jpeg|png|gif|bmp)', f, flags=re.I)]
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
@@ -63,9 +68,12 @@ class Face_Recognition:
                 self.known_face_encodings.append(encodings[0])
 
 
-    def recognize_faces_in_image(self, file_stream, model='hog'):
+    def recognize_faces_in_image(self, image_stream, is_file=True, model='hog'):
         logging.debug("step1: Load the uploaded image file")
-        image = face_recognition.load_image_file(file_stream)
+        if is_file:
+            image = face_recognition.load_image_file(image_stream)
+        else:
+            image = image_stream
         #logging.debug("step1.1: Resize image to 1/4 size for faster face recognition processing")
         #image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
         logging.debug("step2: Find all the faces ")
@@ -140,3 +148,74 @@ class Face_Recognition:
         logging.debug("step5: Return the result as json")
         return result
 
+
+import argparse
+import sys
+import time
+import cv2
+def add_overlays(frame, faces, resize_rate):
+    if faces is not None:
+        for face in faces:
+            face_bb = [face['top']*resize_rate, face['right']*resize_rate, face['bottom']*resize_rate, face['left']*resize_rate]
+            cv2.rectangle(frame,
+                          (face_bb[3], face_bb[0]), (face_bb[1], face_bb[2]),
+                          (0, 0, 255), 2)
+            if face['name'] is not None:
+                # Draw a label with a name below the face
+                cv2.rectangle(frame, (face_bb[3], face_bb[2] - 35), (face_bb[1], face_bb[2]), (0, 0, 255), cv2.FILLED)
+                cv2.putText(frame, face['name'], (face_bb[3] + 6, face_bb[2] - 6), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255), 1)
+
+def main(args):
+    frame_interval = 1  # Number of frames after which to run face detection
+    fps_display_interval = 3  # seconds
+    frame_rate = 0
+    frame_count = 0
+    resize_rate = 0.25
+
+    video_capture = cv2.VideoCapture(0)
+    recognition = Face_Recognition()
+    recognition.scan_known_people(os.path.dirname(os.path.abspath(__file__)) + "/../face_db")
+    start_time = time.time()
+
+    if args.debug:
+        print("Debug enabled")
+        face.debug = True
+
+    while True:
+        # Capture frame-by-frame
+        ret, frame = video_capture.read()
+
+        if (frame_count % frame_interval) == 0:
+            # Resize frame of video for faster face recognition processing
+            small_frame = cv2.resize(frame, (0, 0), fx=resize_rate, fy=resize_rate)
+            result = recognition.recognize_faces_in_image(small_frame, is_file=False)
+            faces = list(result['face_data'].values())
+
+            # Check our current fps
+            end_time = time.time()
+            if (end_time - start_time) > fps_display_interval:
+                frame_rate = int(frame_count / (end_time - start_time))
+                start_time = time.time()
+                frame_count = 0
+
+        add_overlays(frame, faces, int(1.0/resize_rate))
+        frame_count += 1
+        cv2.imshow('Video', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # When everything is done, release the capture
+    video_capture.release()
+    cv2.destroyAllWindows()
+    os._exit(0)
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', action='store_true',
+                        help='Enable some debug outputs.')
+    return parser.parse_args(argv)
+
+if __name__ == '__main__':
+    main(parse_arguments(sys.argv[1:]))
