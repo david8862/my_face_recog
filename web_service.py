@@ -30,6 +30,7 @@
 import numpy as np
 import cv2, PIL, os
 from flask import Flask, jsonify, request, redirect, make_response, render_template, Response
+import flask_monitoringdashboard as dashboard
 from libs.faces import Face_Recognition
 #from libs.face_net import Face_Recognition
 from libs.utils import allowed_image
@@ -38,6 +39,7 @@ from libs.cucm import Cucm
 
 
 app = Flask(__name__)
+dashboard.bind(app)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 origin_image_buffer = np.zeros(5)

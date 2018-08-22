@@ -2,6 +2,7 @@ face_recognition
 opencv-python
 pillow
 flask
+flask_monitoringdashboard
 requests
 pyOpenSSL
 selenium
