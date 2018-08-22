@@ -133,8 +133,7 @@ class Face_Recognition:
             "face_data": {},
         }
 
-        i = 1
-        for (top, right, bottom, left), name in zip(face_locations, face_names):
+        for i, ((top, right, bottom, left), name) in enumerate(zip(face_locations, face_names)):
             face = {
                 "name": name,
                 "top": top,
@@ -142,8 +141,7 @@ class Face_Recognition:
                 "bottom": bottom,
                 "left": left,
                     }
-            result['face_data']['face{}'.format(i)] = face
-            i = i + 1
+            result['face_data']['face{}'.format(i+1)] = face
 
         logging.debug("step5: Return the result as json")
         return result
