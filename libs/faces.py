@@ -68,12 +68,12 @@ class Face_Recognition:
                 self.known_face_encodings.append(encodings[0])
 
 
-    def recognize_faces_in_image(self, image_stream, is_file=True, model='hog'):
-        logging.debug("step1: Load the uploaded image file")
-        if is_file:
-            image = face_recognition.load_image_file(image_stream)
-        else:
+    def recognize_faces_in_image(self, image_stream, model='hog'):
+        logging.debug("step1: Load the image")
+        if isinstance (image_stream, np.ndarray):
             image = image_stream
+        else:
+            image = face_recognition.load_image_file(image_stream)
         #logging.debug("step1.1: Resize image to 1/4 size for faster face recognition processing")
         #image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
         logging.debug("step2: Find all the faces ")
@@ -186,7 +186,7 @@ def main(args):
         if (frame_count % frame_interval) == 0:
             # Resize frame of video for faster face recognition processing
             small_frame = cv2.resize(frame, (0, 0), fx=resize_rate, fy=resize_rate)
-            result = recognition.recognize_faces_in_image(small_frame, is_file=False)
+            result = recognition.recognize_faces_in_image(small_frame)
             faces = list(result['face_data'].values())
 
             # Check our current fps

@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
-IMPLICIT_WAIT_TIME = 10
+IMPLICIT_WAIT_TIME = 20
 
 def addLog(f):
     def wrapped_f(*args, **kwargs):
@@ -178,8 +178,9 @@ class Cucm(object):
         self.browser.quit()
 
 if __name__ == "__main__":
-    my_cucm = Cucm(host="10.74.63.21", cm_username="1", cm_password="1")
+    #my_cucm = Cucm(host="10.74.63.21", cm_username="1", cm_password="1")
     #my_phone = my_cucm.find_phone("5006AB802B51")
     #my_cucm.change_line_dn(my_phone, "10710", "10711")
     #my_cucm.change_line_label(my_phone, "10711", "Xiaobin Zhang")
     #my_cucm.quit()
+    pass
