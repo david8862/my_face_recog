@@ -25,7 +25,7 @@ def image_files_in_folder(folder):
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 
-class Face:
+class Face(object):
     def __init__(self):
         self.name = None
         self.container_path = None
@@ -35,7 +35,7 @@ class Face:
         self.embedding = None
 
 
-class Face_Recognition:
+class Face_Recognition(object):
     distance_threshold=1.0
 
     def __init__(self):
@@ -132,7 +132,7 @@ class Face_Recognition:
         logging.debug("step5: Return the result as json")
         return result
 
-class Detection:
+class Detection(object):
     # face detection parameters
     gpu_memory_fraction = 0.3
     minsize = 20  # minimum size of face
@@ -161,7 +161,7 @@ class Detection:
         return [[int(top), int(right), int(bottom), int(left)] for (left, top, right, bottom) in bounding_boxes]
 
 
-class Aligner:
+class Aligner(object):
     face_size=160
     margin=44
     predictor_model=os.path.split(os.path.realpath(__file__))[0] + '/models/shape_predictor_68_face_landmarks.dat'
@@ -215,7 +215,7 @@ class Aligner:
 
 
 
-class Encoder:
+class Encoder(object):
     model=os.path.split(os.path.realpath(__file__))[0] + '/models/20180402-114759.pb'
 
     def __init__(self, model=None):

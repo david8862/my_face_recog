@@ -14,7 +14,7 @@ def image_files_in_folder(folder):
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
-class Face_Recognition:
+class Face_Recognition(object):
     distance_threshold=0.45
     num_jitters=3
 
