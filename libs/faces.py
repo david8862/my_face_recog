@@ -170,9 +170,9 @@ def main(args):
     frame_count = 0
     resize_rate = 0.25
 
-    video_capture = cv2.VideoCapture(0)
     recognition = Face_Recognition()
     recognition.scan_known_people(os.path.dirname(os.path.abspath(__file__)) + "/../face_db")
+    video_capture = cv2.VideoCapture(0)
     start_time = time.time()
 
     if args.debug:
