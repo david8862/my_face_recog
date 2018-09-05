@@ -7,7 +7,7 @@ WORKDIR /root
 
 # install tools
 RUN apt update \
-    && apt install -y iputils-ping net-tools wget curl vim git cmake imagemagick virtualenv python-pip python3-pip python-opencv python-dev libssl-dev libffi-dev build-essential libgtk-3-0 libdbus-glib-1-2 \
+    && apt install -y iputils-ping net-tools wget curl vim git cmake imagemagick virtualenv python-pip python3-pip python-opencv python-dev libx11-dev libssl-dev libffi-dev build-essential libgtk-3-0 libdbus-glib-1-2 \
     && curl -LO https://github.com/mozilla/geckodriver/releases/download/v0.21.0/geckodriver-v0.21.0-linux64.tar.gz \
     && tar -xf geckodriver-v0.21.0-linux64.tar.gz -C /sbin \
     && rm -rf geckodriver-v0.21.0-linux64.tar.gz
@@ -24,7 +24,7 @@ RUN git clone https://github.com/davisking/dlib.git \
 	&& mkdir build; cd build; cmake .. -DDLIB_USE_CUDA=0 -DUSE_SSE4_INSTRUCTIONS=1 -DUSE_AVX_INSTRUCTIONS=0; cmake --build . \
     && cd .. \
     && python3 setup.py install --yes USE_SSE4_INSTRUCTIONS --no USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA \
-    && pip3 install face_recognition opencv-python pillow flask requests pyOpenSSL selenium
+    && pip3 install face_recognition opencv-python pillow scikit-image flask flask_monitoringdashboard requests pyOpenSSL selenium
 
 # build facenet & openface env
 RUN git clone https://github.com/cmusatyalab/openface.git \
