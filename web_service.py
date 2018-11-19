@@ -28,9 +28,10 @@
 
 
 import numpy as np
-import cv2, PIL, os
+import cv2, PIL, os, re
 from flask import Flask, jsonify, request, redirect, make_response, render_template, Response
 import flask_monitoringdashboard as dashboard
+import requests, json
 from libs.faces import Face_Recognition
 #from libs.face_net import Face_Recognition
 from libs.utils import allowed_image
@@ -217,6 +218,43 @@ def update_cucm_info(phone_mac, cec_id):
     my_cucm.quit()
 
 
+def checkip(ip):
+    p = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$')
+    if p.match(ip):
+        return True
+    else:
+        return False
+
+
+def do_em_login(phone_mac, cec_id, cucm, domain):
+    mobile_verify = True
+    em_user = 'pd2'
+    em_passwd = '88898889'
+    #form login url, format like:
+    #http://shark-ucm-171.cisco.com:8080/emapp/EMAppServlet?device=SEP0057D2C00CE2&EMCC=true&seq=12345&userid=em1
+    #https://shark-ucm-171.cisco.com:8443/emapp/EMAppServlet?device=SEP0057D2C00CE2&EMCC=true&seq=12345&userid=em1
+
+    if checkip(cucm) == True:
+        server = cucm
+    else:
+        server = cucm + '.' + domain
+
+    #url = 'http://10.74.63.21:8080/emapp/EMAppServlet?device=SEP5006AB802B51&EMCC=true&seq=12345&userid=em1'
+    url = 'http://' + server + ':8080/emapp/EMAppServlet?device=SEP' + phone_mac + '&EMCC=true&seq=' + em_passwd + '&userid=' + em_user
+    #url = 'https://' + server + ':8443/emapp/EMAppServlet?device=SEP' + phone_mac + '&EMCC=true&seq=' + em_passwd + '&userid=' + em_user
+
+    if mobile_verify == True:
+        try:
+            response = requests.get(url, verify=False)
+            if response.status_code != 200:
+                print ("em request to ", cucm, " failed!")
+                print (json.dumps(response.json(), indent=4, sort_keys=True))
+                return False
+        except Exception as e:
+            print ("em request exception", e)
+            return False
+
+
 @app.route('/emlogin/demo', methods=['GET', 'POST'])
 def emlogin_demo():
     if request.method != 'POST':
@@ -226,10 +264,17 @@ def emlogin_demo():
         return 'No MAC addr received!\n'
     if 'cec' not in request.form:
         return 'No CEC ID received!\n'
+    if 'activecucm' not in request.form:
+        return 'No CUCM address received!\n'
+    if 'domain' not in request.form:
+        return 'No domain name received!\n'
 
     cec = request.form['cec']
     mac = request.form['mac']
-    update_cucm_info(mac, cec)
+    cucm = request.form['activecucm']
+    domain = request.form['domain']
+    #update_cucm_info(mac, cec)
+    do_em_login(mac, cec, cucm, domain)
 
     return 'Update successfully!\n'
 
