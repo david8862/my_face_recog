@@ -395,18 +395,19 @@ async def upload_image():
     if request.method == 'GET':
         return await render_template('index.html')
 
-    if request.method == 'POST' and 'photo' in request.form:
+    forms = await request.form
+    if request.method == 'POST' and 'photo' in forms:
         filename = uuid.uuid1()
-        if 'cec_id' in request.form and request.form['cec_id'] != '':
-            filename = "{}{}".format(filename,request.form['cec_id'])
-        upg_photo = request.form['photo'].split(',')[-1]
+        if 'cec_id' in forms and forms['cec_id'] != '':
+            filename = "{}{}".format(filename,forms['cec_id'])
+        upg_photo = forms['photo'].split(',')[-1]
         file = os.path.join(APP_ROOT, "face_test/{}.png".format(filename))
         with open(file, "wb") as fh:
             fh.write(base64.b64decode(upg_photo))
         result = recognition.recognize_faces_in_image(file)
         faces = list(result['face_data'].values())
         faces.sort(key=lambda k:k['left'])
-        if 'enable_face_plus' in request.form and request.form['enable_face_plus'] == 'on':
+        if 'enable_face_plus' in forms and forms['enable_face_plus'] == 'on':
             face_datas = get_external_result(upg_photo)
             for i in range(len(faces)):
                 face_datas[i]['name'] = faces[i]['name']
