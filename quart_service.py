@@ -25,12 +25,12 @@
 #}
 #
 # This example is based on the Flask file upload example: http://flask.pocoo.org/docs/0.12/patterns/fileuploads/
+# and has migrated to new asyncio based framework quart: http://pgjones.gitlab.io/quart/
 
 
 import numpy as np
 import cv2, PIL, os, re
 from quart import Quart, jsonify, request, redirect, make_response, render_template, Response
-#import flask_monitoringdashboard as dashboard
 import requests, json
 from libs.faces import Face_Recognition
 #from libs.face_net import Face_Recognition
@@ -40,7 +40,6 @@ from libs.cucm import Cucm
 
 
 app = Quart(__name__)
-#dashboard.bind(app)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 origin_image_buffer = np.zeros(5)
