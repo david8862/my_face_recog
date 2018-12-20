@@ -29,7 +29,7 @@
 
 
 import numpy as np
-import cv2, PIL, os, re
+import cv2, PIL, os, re, shutil
 from quart import Quart, jsonify, request, redirect, make_response, render_template, Response
 import requests, json
 from libs.faces import Face_Recognition
@@ -38,13 +38,21 @@ from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
 from libs.cucm import Cucm
 
-
-app = Quart(__name__)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-origin_image_buffer = np.zeros(5)
-result_image_buffer = np.zeros(5)
 recognition = None
+
+def create_app():
+    global recognition
+    app = Quart(__name__)
+    face_db = os.path.join(APP_ROOT, "face_db")
+    recognition = Face_Recognition()
+    recognition.scan_known_people(face_db)
+    if os.path.exists('tmp/'):
+        shutil.rmtree('tmp/')
+    os.mkdir('tmp/')
+    return app
+
+app = create_app()
 
 
 def update_cucm_info(phone_mac, cec_id):
@@ -335,7 +343,6 @@ def save_ori_image(imgfile):
 
 @app.route('/', methods=['GET', 'POST'])
 async def upload_image_manually():
-    global result_image_buffer, origin_image_buffer
     # Check if a valid image file was uploaded
     if request.method == 'POST':
         filelist = await request.files
@@ -350,12 +357,10 @@ async def upload_image_manually():
             # The image file seems valid! Detect faces and return the result.
             result = recognition.recognize_faces_in_image(file)
             img = add_face_rectangle(result, file)
-            retval, buff = cv2.imencode('.jpg', img)
-            result_image_buffer = buff.copy()
+            cv2.imencode('.jpg', img)[1].tofile('tmp/result.jpg')
 
             ori_img = save_ori_image(file)
-            retval, ori_buff = cv2.imencode('.jpg', ori_img)
-            origin_image_buffer = ori_buff.copy()
+            cv2.imencode('.jpg', ori_img)[1].tofile('tmp/origin.jpg')
             return await render_template('showimage.html')
 
     # If no valid image file was uploaded, show the file upload form:
@@ -371,14 +376,16 @@ async def upload_image_manually():
 
 @app.route('/result_image')
 async def get_result_image():
-    global result_image_buffer
-    frame = result_image_buffer.tobytes()
+    img = cv2.imread('tmp/result.jpg')
+    ret, frame = cv2.imencode('.jpg', img)
+    frame = frame.tobytes()
     return Response(frame, mimetype='image/jpg')
 
 @app.route('/origin_image')
 async def get_origin_image():
-    global origin_image_buffer
-    frame = origin_image_buffer.tobytes()
+    img = cv2.imread('tmp/origin.jpg')
+    ret, frame = cv2.imencode('.jpg', img)
+    frame = frame.tobytes()
     return Response(frame, mimetype='image/jpg')
 
 
@@ -415,7 +422,4 @@ async def upload_image():
         return await render_template('result.html',face_datas = faces)
 
 if __name__ == "__main__":
-    face_db = os.path.join(APP_ROOT, "face_db")
-    recognition = Face_Recognition()
-    recognition.scan_known_people(face_db)
     app.run(host='0.0.0.0', port=5001, certfile='cert/cert.pem', keyfile='cert/key.pem')

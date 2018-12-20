@@ -63,7 +63,7 @@ RUN git clone https://github.com/davisking/dlib.git \
     && mkdir build; cd build; cmake .. -DDLIB_USE_CUDA=0 -DUSE_SSE4_INSTRUCTIONS=1 -DUSE_AVX_INSTRUCTIONS=1; cmake --build . \
     && cd .. \
     && python3.7 setup.py install --yes USE_SSE4_INSTRUCTIONS --yes USE_AVX_INSTRUCTIONS --no DLIB_USE_CUDA \
-    && pip3.7 install face_recognition opencv-python pillow scikit-image quart flask flask_monitoringdashboard requests pyOpenSSL selenium
+    && pip3.7 install face_recognition opencv-python pillow scikit-image quart flask gunicorn flask_monitoringdashboard requests pyOpenSSL selenium
 
 # build facenet & openface env
 RUN git clone https://github.com/cmusatyalab/openface.git \
@@ -87,6 +87,7 @@ RUN git clone https://github.com/david8862/my_face_recog.git \
     && cd my_face_recog/libs/models/ \
     && wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2 \
     && bzip2 -d shape_predictor_68_face_landmarks.dat.bz2
+
 
 # Add container metadata
 LABEL description="Develop docker for python face_recognition" version="0.2"
