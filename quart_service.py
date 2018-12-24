@@ -36,16 +36,19 @@ from libs.faces import Face_Recognition
 #from libs.face_net import Face_Recognition
 from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
+#from libs.face_feature import Face_Features
 from libs.cucm import Cucm
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 recognition = None
+features = None
 
 def create_app():
-    global recognition
+    global recognition, features
     app = Quart(__name__)
     face_db = os.path.join(APP_ROOT, "face_db")
     recognition = Face_Recognition()
+    #features = Face_Features()
     recognition.scan_known_people(face_db)
     if os.path.exists('tmp/'):
         shutil.rmtree('tmp/')
@@ -397,6 +400,7 @@ def not_found(error):
 
 @app.route('/capture', methods=['GET', 'POST'])
 async def upload_image():
+    global recognition, features
     import base64, uuid
     if request.method == 'GET':
         return await render_template('index.html')
@@ -415,6 +419,7 @@ async def upload_image():
         faces.sort(key=lambda k:k['left'])
         if 'enable_face_plus' in forms and forms['enable_face_plus'] == 'on':
             face_datas = get_external_result(upg_photo)
+            #face_datas = features.get_features(upg_photo)
             for i in range(len(faces)):
                 face_datas[i]['name'] = faces[i]['name']
             return await render_template('result.html',face_datas = face_datas)
