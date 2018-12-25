@@ -36,7 +36,7 @@ from libs.faces import Face_Recognition
 #from libs.face_net import Face_Recognition
 from libs.utils import allowed_image
 from libs.face_plus_plus import get_external_result
-#from libs.face_feature import Face_Features
+from libs.face_feature import Face_Features
 from libs.cucm import Cucm
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -48,7 +48,7 @@ def create_app():
     app = Flask(__name__)
     face_db = os.path.join(APP_ROOT, "face_db")
     recognition = Face_Recognition()
-    #features = Face_Features()
+    features = Face_Features()
     recognition.scan_known_people(face_db)
     if os.path.exists('tmp/'):
         shutil.rmtree('tmp/')
@@ -415,8 +415,8 @@ def upload_image():
         faces = list(result['face_data'].values())
         faces.sort(key=lambda k:k['left'])
         if 'enable_face_plus' in request.form and request.form['enable_face_plus'] == 'on':
-            face_datas = get_external_result(upg_photo)
-            #face_datas = features.get_features(upg_photo)
+            #face_datas = get_external_result(upg_photo)
+            face_datas = features.get_features(upg_photo)
             for i in range(len(faces)):
                 face_datas[i]['name'] = faces[i]['name']
             return render_template('result.html',face_datas = face_datas)
