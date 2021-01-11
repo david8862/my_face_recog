@@ -8,7 +8,7 @@ quart
 requests
 pyOpenSSL
 selenium
-tensorflow==1.12
+tensorflow
 scipy
 scikit-learn
 scikit-image
