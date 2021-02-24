@@ -79,6 +79,18 @@ class Face_Recognition(object):
             return np.empty((0))
         return np.linalg.norm(face_embeddings - face_to_compare, axis=1)
 
+    def load_aligned_face(self, image_file, face_size=None, margin=None):
+        image = self.load_image_file(image_file)
+        locations = self.detect.get_face_locations(image)
+
+        if len(locations) < 1:
+            print("WARNING: No faces found in {}. Ignoring file.".format(image_file))
+            return None
+        elif len(locations) > 1:
+            print("WARNING: More than one face found in {}. Only considering the first face.".format(image_file))
+
+        aligned_face = self.align.get_aligned_face(image, locations[0], face_size=face_size, margin=margin)
+        return aligned_face
 
     def recognize_faces_in_image(self, image_stream):
         logging.debug("step1: Load the image")
